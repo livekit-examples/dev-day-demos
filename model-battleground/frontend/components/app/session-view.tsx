@@ -88,8 +88,8 @@ const AGENT_CARD_DEFINITIONS: AgentCardDefinition[] = [
   {
     id: 'agent-2',
     name: 'Agent 2',
-    dispatchAgentName: 'battleground-agent-2',
-    participantIdentities: ['battleground-agent-2'],
+    dispatchAgentName: 'devday-battleground-agent-2',
+    participantIdentities: ['devday-battleground-agent-2'],
     initialMetrics: {
       stt: { label: 'STT (TBD)', value: 22, latencyMs: 110 },
       llm: { label: 'LLM (TBD)', value: 18, latencyMs: 180 },
@@ -100,8 +100,8 @@ const AGENT_CARD_DEFINITIONS: AgentCardDefinition[] = [
   {
     id: 'agent-3',
     name: 'Agent 3',
-    dispatchAgentName: 'battleground-agent-3',
-    participantIdentities: ['battleground-agent-3'],
+    dispatchAgentName: 'devday-battleground-agent-3',
+    participantIdentities: ['devday-battleground-agent-3'],
     initialMetrics: {
       stt: { label: 'STT (TBD)', value: 15, latencyMs: 75 },
       llm: { label: 'LLM (TBD)', value: 21, latencyMs: 210 },
