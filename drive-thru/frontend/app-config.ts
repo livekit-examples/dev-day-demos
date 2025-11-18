@@ -35,5 +35,5 @@ export const APP_CONFIG_DEFAULTS: AppConfig = {
   accentDark: '#1fd5f9',
   startButtonText: 'Start call',
 
-  agentName: "devday-driver-agent",
+  agentName: "devday-drive-thru-agent",
 };
