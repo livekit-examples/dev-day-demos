@@ -1,12 +1,10 @@
 import { headers } from 'next/headers';
-import Image, { type ImageLoader } from 'next/image';
+import { PassthroughImage } from '@/components/passthrough-image';
 import { getAppConfig, getOrigin } from '@/lib/utils';
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
-
-const passthroughImageLoader: ImageLoader = ({ src }) => src;
 
 export default async function AppLayout({ children }: AppLayoutProps) {
   const hdrs = await headers();
@@ -22,18 +20,14 @@ export default async function AppLayout({ children }: AppLayoutProps) {
           href="https://livekit.io"
           className="scale-100 transition-transform duration-300 hover:scale-110"
         >
-          <Image
-            loader={passthroughImageLoader}
-            unoptimized
+          <PassthroughImage
             src={logo}
             alt={`${companyName} Logo`}
             width={24}
             height={24}
             className="block size-6 dark:hidden"
           />
-          <Image
-            loader={passthroughImageLoader}
-            unoptimized
+          <PassthroughImage
             src={logoDark ?? logo}
             alt={`${companyName} Logo`}
             width={24}
