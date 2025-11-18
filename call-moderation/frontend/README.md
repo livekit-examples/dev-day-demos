@@ -1,122 +1,72 @@
-# Agent Starter for React
+# Call Moderation Frontend
 
-This is a starter template for [LiveKit Agents](https://docs.livekit.io/agents) that provides a simple voice interface using the [LiveKit JavaScript SDK](https://github.com/livekit/client-sdk-js). It supports [voice](https://docs.livekit.io/agents/start/voice-ai), [transcriptions](https://docs.livekit.io/agents/build/text/), and [virtual avatars](https://docs.livekit.io/agents/integrations/avatar).
+This Next.js 15 app is the rider-facing “dispatch console” used in the @call-moderation demo. It joins a LiveKit room, connects to the **driver agent** (`devday-driver-agent`), listens for RPC alerts from the **moderation agent**, and renders a mobile-like interface to demo realtime moderation and rider notification.
 
-Also available for:
-[Android](https://github.com/livekit-examples/agent-starter-android) • [Flutter](https://github.com/livekit-examples/agent-starter-flutter) • [Swift](https://github.com/livekit-examples/agent-starter-swift) • [React Native](https://github.com/livekit-examples/agent-starter-react-native)
+![App hero](./.github/assets/readme-hero-light.webp)
 
-<picture>
-  <source srcset="./.github/assets/readme-hero-dark.webp" media="(prefers-color-scheme: dark)">
-  <source srcset="./.github/assets/readme-hero-light.webp" media="(prefers-color-scheme: light)">
-  <img src="./.github/assets/readme-hero-light.webp" alt="App screenshot">
-</picture>
+## Highlights
 
-### Features:
+- **Live session** – timer, driver profile, rating summary, and mic controls that sit on top of the LiveKit audio session.
+- **Safety alerts** – the moderation worker calls `moderation.show_violation`; `SessionView` registers that RPC and surfaces the severity + description in a prominent warning card.
+- **Agent-aware tokens** – the `/api/connection-details` route accepts the configured `agentName`, bakes it into the LiveKit access token, and ensures the driver agent auto-joins each new room.
 
-- Real-time voice interaction with LiveKit Agents
-- Camera video streaming support
-- Screen sharing capabilities
-- Audio visualization and level monitoring
-- Virtual avatar integration
-- Light/dark theme switching with system preference detection
-- Customizable branding, colors, and UI text via configuration
+## Prerequisites
 
-This template is built with Next.js and is free for you to use or modify as you see fit.
+- Node.js 20+
+- [pnpm 9](https://pnpm.io/)
+- Running instances of both backend workers (`../driver-agent` and `../moderation-agent`)
+- LiveKit Cloud (or self-hosted) credentials with Agent Dispatch enabled
 
-### Project structure
+## Local setup
 
-```
-agent-starter-react/
-├── app/
-│   ├── (app)/
-│   ├── api/
-│   ├── components/
-│   ├── fonts/
-│   ├── globals.css
-│   └── layout.tsx
-├── components/
-│   ├── livekit/
-│   ├── ui/
-│   ├── app.tsx
-│   ├── session-view.tsx
-│   └── welcome.tsx
-├── hooks/
-├── lib/
-├── public/
-└── package.json
-```
+1. Install dependencies:
 
-## Getting started
+   ```bash
+   pnpm install
+   ```
 
-> [!TIP]
-> If you'd like to try this application without modification, you can deploy an instance in just a few clicks with [LiveKit Cloud Sandbox](https://cloud.livekit.io/projects/p_/sandbox/templates/agent-starter-react).
+2. Configure LiveKit credentials:
 
-[![Open on LiveKit](https://img.shields.io/badge/Open%20on%20LiveKit%20Cloud-002CF2?style=for-the-badge&logo=external-link)](https://cloud.livekit.io/projects/p_/sandbox/templates/agent-starter-react)
+   ```bash
+   cp .env.example .env.local
+   # then edit LIVEKIT_URL / LIVEKIT_API_KEY / LIVEKIT_API_SECRET
+   ```
 
-Run the following command to automatically clone this template.
+3. Start the dev server:
 
-```bash
-lk app create --template agent-starter-react
-```
+   ```bash
+   pnpm dev
+   ```
 
-Then run the app with:
+4. In another terminal, run the driver agent (`uv run python src/agent.py dev` inside `../driver-agent`). It will automatically dispatch the moderation agent.
+
+5. Visit http://localhost:3000, click **Contact Driver**, and listen for Esteban plus any violations the moderator reports.
+
+## Connection flow
+
+- `app-config.ts` holds UI branding plus the `agentName` (`devday-driver-agent`). Update it if you rename the worker.
+- `hooks/useConnectionDetails` issues a `POST` to `/api/connection-details`, which mints a short-lived token and includes the agent name inside `RoomConfiguration`.
+- The browser joins the LiveKit room, un-mutes the mic, and the driver agent receives a matching dispatch.
+- The moderation agent sends RPC payloads to `moderation.show_violation`; `SessionView` parses the JSON and shows the alert via `SafetyAlertCard`.
+
+## Key files
+
+- `components/app/session-view.tsx` – core layout, timer, driver card, RPC handling for violations.
+- `components/livekit/agent-control-bar` – shared mic toggle logic with LiveKit’s hooks.
+- `app/api/connection-details/route.ts` – server route that issues LiveKit tokens and passes along the agent configuration.
+- `hooks/useChatMessages.ts` – hydrates the transcript view from LiveKit component events.
+
+## Build & deploy
 
 ```bash
-pnpm install
-pnpm dev
+pnpm build
+pnpm start
 ```
 
-And open http://localhost:3000 in your browser.
+Deploy behind HTTPS so browsers grant microphone access, and remember to set `LIVEKIT_*` env vars plus any branding overrides through `app-config.ts`.
 
-You'll also need an agent to speak with. Try our starter agent for [Python](https://github.com/livekit-examples/agent-starter-python), [Node.js](https://github.com/livekit-examples/agent-starter-node), or [create your own from scratch](https://docs.livekit.io/agents/start/voice-ai/).
+## Troubleshooting
 
-## Configuration
-
-This starter is designed to be flexible so you can adapt it to your specific agent use case. You can easily configure it to work with different types of inputs and outputs:
-
-#### Example: App configuration (`app-config.ts`)
-
-```ts
-export const APP_CONFIG_DEFAULTS: AppConfig = {
-  companyName: 'LiveKit',
-  pageTitle: 'LiveKit Voice Agent',
-  pageDescription: 'A voice agent built with LiveKit',
-
-  supportsChatInput: true,
-  supportsVideoInput: true,
-  supportsScreenShare: true,
-  isPreConnectBufferEnabled: true,
-
-  logo: '/lk-logo.svg',
-  accent: '#002cf2',
-  logoDark: '/lk-logo-dark.svg',
-  accentDark: '#1fd5f9',
-  startButtonText: 'Start call',
-
-  // for LiveKit Cloud Sandbox
-  sandboxId: undefined,
-  agentName: undefined,
-};
-```
-
-You can update these values in [`app-config.ts`](./app-config.ts) to customize branding, features, and UI text for your deployment.
-
-> [!NOTE]
-> The `sandboxId` and `agentName` are for the LiveKit Cloud Sandbox environment.
-> They are not used for local development.
-
-#### Environment Variables
-
-You'll also need to configure your LiveKit credentials in `.env.local` (copy `.env.example` if you don't have one):
-
-```env
-LIVEKIT_API_KEY=your_livekit_api_key
-LIVEKIT_API_SECRET=your_livekit_api_secret
-LIVEKIT_URL=https://your-livekit-server-url
-```
-
-These are required for the voice agent functionality to work with your LiveKit project.
-
-## Contributing
-
-This template is open source and we welcome contributions! Please open a PR or issue through GitHub, and don't forget to join us in the [LiveKit Community Slack](https://livekit.io/join-slack)!
+- **No moderation alerts?** Make sure the moderation agent is deployed as `devday-moderation-agent` and that the driver’s `_dispatch_moderation_agent` succeeds (check worker logs).
+- **Agent never joins?** Confirm `/api/connection-details` receives an `agentName` in `room_config.agents[0].agent_name`; this comes straight from `app-config`.
+- **Mic stuck muted?** Browsers block autoplay + mic until the user interacts. Keep `isPreConnectBufferEnabled` off (already false) and verify permissions in the browser UI.

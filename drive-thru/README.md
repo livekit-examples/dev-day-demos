@@ -1,6 +1,6 @@
 # LiveKit Drive-Thru Demo
 
-This folder contains the complete @drive-thru experience showcased at Dev Day: a LiveKit-powered voice agent that takes orders like a McDonald’s attendant plus a Next.js dashboard that shows the cart in real time. Think of it as an end-to-end reference for combining [LiveKit Agents](https://docs.livekit.io/agents) with a custom web frontend.
+This folder contains the complete @drive-thru experience showcased at Dev Day: a LiveKit-powered voice agent that takes orders like a McDonald’s attendant plus a Next.js dashboard that shows the cart in real time.
 
 ## Repository layout
 
@@ -48,7 +48,7 @@ Each directory has its own README with deeper instructions on setup, architectur
 
 ## Deployment notes
 
-- The Python worker is production-ready (Dockerfile included) and can be scheduled on LiveKit Cloud or any other compute that can reach LiveKit.
+- The Python worker is production-ready (Dockerfile included) and can be deployed on LiveKit Cloud using `lk agent deploy`
 - The Next.js app only needs `LIVEKIT_*` env vars plus an HTTPS origin so browsers grant mic access.
 - Keep your agent and frontend synced on agent ID—if you rename the worker in Cloud, update `app-config.ts`.
 
