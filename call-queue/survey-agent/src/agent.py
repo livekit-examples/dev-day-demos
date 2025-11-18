@@ -40,7 +40,7 @@ class SurveyQuestion:
 SURVEY_QUESTIONS: tuple[SurveyQuestion, ...] = (
     SurveyQuestion(
         id="ride_frequency",
-        prompt="How many times per week do you typically request a ridesharewith us?",
+        prompt="How many times per week do you typically request a rideshare with us?",
     ),
     SurveyQuestion(
         id="recent_rating",

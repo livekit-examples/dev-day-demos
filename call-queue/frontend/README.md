@@ -1,122 +1,66 @@
-# Agent Starter for React
+# Call Queue Frontend
 
-This is a starter template for [LiveKit Agents](https://docs.livekit.io/agents) that provides a simple voice interface using the [LiveKit JavaScript SDK](https://github.com/livekit/client-sdk-js). It supports [voice](https://docs.livekit.io/agents/start/voice-ai), [transcriptions](https://docs.livekit.io/agents/build/text/), and [virtual avatars](https://docs.livekit.io/agents/integrations/avatar).
+This Next.js 15 app is the dispatcher console for the Survey Queue example. It polls LiveKit for open rooms, and shows how far each post-call survey has progressed, and lets a human jump into any call to finish the questionnaire with the `devday-survey-agent`.
 
-Also available for:
-[Android](https://github.com/livekit-examples/agent-starter-android) • [Flutter](https://github.com/livekit-examples/agent-starter-flutter) • [Swift](https://github.com/livekit-examples/agent-starter-swift) • [React Native](https://github.com/livekit-examples/agent-starter-react-native)
+## Highlights
 
-<picture>
-  <source srcset="./.github/assets/readme-hero-dark.webp" media="(prefers-color-scheme: dark)">
-  <source srcset="./.github/assets/readme-hero-light.webp" media="(prefers-color-scheme: light)">
-  <img src="./.github/assets/readme-hero-light.webp" alt="App screenshot">
-</picture>
+- **Live queue dashboard** – `useRoomQueue` polls `/api/rooms` every second, which in turn calls the LiveKit Room Service API. Metadata written by the survey agent feeds the “questions answered” progress pills inside each card.
+- **Room-aware start button** – Selecting a call launches the real-time session UI, mints a LiveKit token via `/api/connection-details`, and ensures the `devday-survey-agent` joins automatically (thanks to the `agentName` from `app-config.ts`).
 
-### Features:
+## Prerequisites
 
-- Real-time voice interaction with LiveKit Agents
-- Camera video streaming support
-- Screen sharing capabilities
-- Audio visualization and level monitoring
-- Virtual avatar integration
-- Light/dark theme switching with system preference detection
-- Customizable branding, colors, and UI text via configuration
+- Node.js 20+
+- [pnpm 9](https://pnpm.io/)
+- LiveKit project credentials with Room Service + Agent Dispatch access
+- The survey agent running locally or on LiveKit Cloud (`../survey-agent`)
 
-This template is built with Next.js and is free for you to use or modify as you see fit.
+## Setup
 
-### Project structure
+1. Install dependencies:
 
-```
-agent-starter-react/
-├── app/
-│   ├── (app)/
-│   ├── api/
-│   ├── components/
-│   ├── fonts/
-│   ├── globals.css
-│   └── layout.tsx
-├── components/
-│   ├── livekit/
-│   ├── ui/
-│   ├── app.tsx
-│   ├── session-view.tsx
-│   └── welcome.tsx
-├── hooks/
-├── lib/
-├── public/
-└── package.json
-```
+   ```bash
+   pnpm install
+   ```
 
-## Getting started
+2. Configure environment variables:
 
-> [!TIP]
-> If you'd like to try this application without modification, you can deploy an instance in just a few clicks with [LiveKit Cloud Sandbox](https://cloud.livekit.io/projects/p_/sandbox/templates/agent-starter-react).
+   ```bash
+   cp .env.example .env.local
+   # then set LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET
+   ```
 
-[![Open on LiveKit](https://img.shields.io/badge/Open%20on%20LiveKit%20Cloud-002CF2?style=for-the-badge&logo=external-link)](https://cloud.livekit.io/projects/p_/sandbox/templates/agent-starter-react)
+   The same credentials are used for both token minting and the Room Service API client.
 
-Run the following command to automatically clone this template.
+3. Start the dev server:
 
-```bash
-lk app create --template agent-starter-react
-```
+   ```bash
+   pnpm dev
+   ```
 
-Then run the app with:
+4. In another terminal, run the survey agent (`uv run python src/agent.py dev`) so there’s someone on the other end of each call.
+
+5. Open http://localhost:3000, wait for rooms to appear in the queue, and click the headset icon to join a survey.
+
+## Connection & queue flow
+
+1. `app-config.ts` defines branding plus the agent ID (`agentName: "devday-survey-agent"`).
+2. When you “Start call,” `session-provider` posts that config to `/api/connection-details`. The route adds the agent to `RoomConfiguration` before minting a participant token, so LiveKit automatically co-locates you with the survey worker.
+3. Separately, `/api/rooms` uses `RoomServiceClient` to list rooms + participants. Room metadata is JSON-decoded so UI components can read survey totals, answered count, and timestamps.
+4. `CallQueueView` merges all of this into queue cards. Once you connect, `SessionView` takes over with the transcript, mic/agent meters, and control bar.
+
+## Key files
+
+- `components/app/call-queue-view.tsx` – queue cards, survey progress UI, phone modal, error/empty states.
+- `components/app/session-view.tsx` – active-call layout, transcript overlay, LiveKit control bar, pre-connect messaging.
+- `app/api/rooms/route.ts` – server-side polling proxy around `RoomServiceClient`.
+- `app/api/connection-details/route.ts` – mints LiveKit tokens that include the survey agent.
+- `hooks/useRoomQueue.ts` – polling hook with abort + backoff logic.
+
+## Build & deploy
 
 ```bash
-pnpm install
-pnpm dev
+pnpm build
+pnpm start
 ```
 
-And open http://localhost:3000 in your browser.
-
-You'll also need an agent to speak with. Try our starter agent for [Python](https://github.com/livekit-examples/agent-starter-python), [Node.js](https://github.com/livekit-examples/agent-starter-node), or [create your own from scratch](https://docs.livekit.io/agents/start/voice-ai/).
-
-## Configuration
-
-This starter is designed to be flexible so you can adapt it to your specific agent use case. You can easily configure it to work with different types of inputs and outputs:
-
-#### Example: App configuration (`app-config.ts`)
-
-```ts
-export const APP_CONFIG_DEFAULTS: AppConfig = {
-  companyName: 'LiveKit',
-  pageTitle: 'LiveKit Voice Agent',
-  pageDescription: 'A voice agent built with LiveKit',
-
-  supportsChatInput: true,
-  supportsVideoInput: true,
-  supportsScreenShare: true,
-  isPreConnectBufferEnabled: true,
-
-  logo: '/lk-logo.svg',
-  accent: '#002cf2',
-  logoDark: '/lk-logo-dark.svg',
-  accentDark: '#1fd5f9',
-  startButtonText: 'Start call',
-
-  // for LiveKit Cloud Sandbox
-  sandboxId: undefined,
-  agentName: undefined,
-};
-```
-
-You can update these values in [`app-config.ts`](./app-config.ts) to customize branding, features, and UI text for your deployment.
-
-> [!NOTE]
-> The `sandboxId` and `agentName` are for the LiveKit Cloud Sandbox environment.
-> They are not used for local development.
-
-#### Environment Variables
-
-You'll also need to configure your LiveKit credentials in `.env.local` (copy `.env.example` if you don't have one):
-
-```env
-LIVEKIT_API_KEY=your_livekit_api_key
-LIVEKIT_API_SECRET=your_livekit_api_secret
-LIVEKIT_URL=https://your-livekit-server-url
-```
-
-These are required for the voice agent functionality to work with your LiveKit project.
-
-## Contributing
-
-This template is open source and we welcome contributions! Please open a PR or issue through GitHub, and don't forget to join us in the [LiveKit Community Slack](https://livekit.io/join-slack)!
+Serve the app over HTTPS so browsers grant microphone access. Set the same `LIVEKIT_*` variables in your hosting environment, and update `app-config.ts` if you rename the survey agent or want different branding.
