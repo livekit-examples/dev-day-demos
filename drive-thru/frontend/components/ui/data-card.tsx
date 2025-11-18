@@ -28,8 +28,8 @@ export function DataCard({
   return (
     <div
       className={cn(
-        'group border-white bg-bg1/90 flex flex-col gap-4 rounded-xl border p-5 shadow-sm transition duration-150 ease-out',
-        'hover:border-white hover:bg-bg2 focus-visible:outline-ring hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
+        'group bg-bg1/90 flex flex-col gap-4 rounded-xl border border-white p-5 shadow-sm transition duration-150 ease-out',
+        'hover:bg-bg2 focus-visible:outline-ring hover:border-white hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
         interactive && 'cursor-pointer',
         className
       )}
