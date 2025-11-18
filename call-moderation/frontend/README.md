@@ -2,7 +2,7 @@
 
 This Next.js 15 app is the rider-facing “dispatch console” used in the @call-moderation demo. It joins a LiveKit room, connects to the **driver agent** (`devday-driver-agent`), listens for RPC alerts from the **moderation agent**, and renders a mobile-like interface to demo realtime moderation and rider notification.
 
-![App hero](./.github/assets/readme-hero-light.webp)
+<img width="1218" height="998" alt="Screenshot 2025-11-18 at 9 23 21 AM" src="https://github.com/user-attachments/assets/008d984f-3190-49a3-aef2-02b198b48d93" />
 
 ## Highlights
 
