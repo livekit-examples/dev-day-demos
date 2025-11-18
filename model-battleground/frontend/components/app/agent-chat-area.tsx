@@ -17,16 +17,16 @@ export function AgentChatArea({ messages = [], className }: AgentChatAreaProps) 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       {messages.length === 0 ? (
-        <div className="text-fg4 text-sm text-center py-8">No messages yet</div>
+        <div className="text-fg4 py-8 text-center text-sm">No messages yet</div>
       ) : (
         messages.map((message) => (
           <div
             key={message.id}
             className={cn(
-              'rounded-lg px-4 py-2 max-w-[80%]',
+              'max-w-[80%] rounded-lg px-4 py-2',
               message.isUser
-                ? 'self-end bg-fgAccent1 text-bg0 rounded-br-none'
-                : 'self-start bg-bg2 text-fg0 rounded-bl-none'
+                ? 'bg-fgAccent1 text-bg0 self-end rounded-br-none'
+                : 'bg-bg2 text-fg0 self-start rounded-bl-none'
             )}
           >
             <p className="text-sm">{message.text}</p>
@@ -36,4 +36,3 @@ export function AgentChatArea({ messages = [], className }: AgentChatAreaProps) 
     </div>
   );
 }
-

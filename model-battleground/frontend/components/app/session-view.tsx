@@ -1,11 +1,10 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RpcInvocationData, RoomEvent } from 'livekit-client';
-import type { RemoteTrackPublication } from 'livekit-client';
+import { RoomEvent } from 'livekit-client';
+import type { RemoteTrackPublication, RpcInvocationData } from 'livekit-client';
 import { useRoomContext } from '@livekit/components-react';
 import type { AppConfig } from '@/app-config';
-import { AgentCard, type AgentMetrics, type ChatMessage } from './agent-card';
 import {
   AgentControlBar,
   type ControlBarControls,
@@ -14,6 +13,7 @@ import { useChatMessages } from '@/hooks/useChatMessages';
 import { useConnectionTimeout } from '@/hooks/useConnectionTimout';
 import { useDebugMode } from '@/hooks/useDebug';
 import { cn } from '@/lib/utils';
+import { AgentCard, type AgentMetrics, type ChatMessage } from './agent-card';
 
 const IN_DEVELOPMENT = process.env.NODE_ENV !== 'production';
 
@@ -163,9 +163,14 @@ const clampLatencyMs = (value: unknown, fallback: number): number => {
   return Math.max(0, value);
 };
 
-const coerceMetricDatum = (datum: MetricDatumPayload | undefined, fallback: MetricDatum): MetricDatum => {
+const coerceMetricDatum = (
+  datum: MetricDatumPayload | undefined,
+  fallback: MetricDatum
+): MetricDatum => {
   const label =
-    typeof datum?.label === 'string' && datum.label.trim().length > 0 ? datum.label : fallback.label;
+    typeof datum?.label === 'string' && datum.label.trim().length > 0
+      ? datum.label
+      : fallback.label;
   const value = clampMetricValue(datum?.value, fallback.value);
   const latencyMs = clampLatencyMs(datum?.latency_ms, fallback.latencyMs);
   return { label, value, latencyMs };
@@ -192,15 +197,19 @@ export const SessionView = ({
   const [controlBarHeight, setControlBarHeight] = useState(0);
   const room = useRoomContext();
   const livekitMessages = useChatMessages();
-  const [agentMetrics, setAgentMetrics] = useState<Record<string, AgentMetrics>>(
-    () => buildDefaultAgentMetrics()
+  const [agentMetrics, setAgentMetrics] = useState<Record<string, AgentMetrics>>(() =>
+    buildDefaultAgentMetrics()
   );
-  const [agentStatuses, setAgentStatuses] = useState<Record<string, boolean>>(DEFAULT_AGENT_STATUSES);
+  const [agentStatuses, setAgentStatuses] =
+    useState<Record<string, boolean>>(DEFAULT_AGENT_STATUSES);
   const [dispatchingAgents, setDispatchingAgents] = useState<Record<string, boolean>>({});
-  const [identityToAgentId, setIdentityToAgentId] =
-    useState<Record<string, string>>(INITIAL_IDENTITY_TO_AGENT_ID);
+  const [identityToAgentId, setIdentityToAgentId] = useState<Record<string, string>>(
+    INITIAL_IDENTITY_TO_AGENT_ID
+  );
   const [activeAgentId, setActiveAgentId] = useState<string>(AGENT_ONE_ID);
-  const [userTranscriptMessages, setUserTranscriptMessages] = useState<Record<string, AgentChatLogEntry[]>>({});
+  const [userTranscriptMessages, setUserTranscriptMessages] = useState<
+    Record<string, AgentChatLogEntry[]>
+  >({});
   const [highlightedAgentId, setHighlightedAgentId] = useState<string>(AGENT_ONE_ID);
 
   useEffect(() => {
@@ -221,16 +230,19 @@ export const SessionView = ({
   }, []);
 
   const { messagesByAgent, pendingIdentityAssignments } = useMemo(() => {
-    const base = AGENT_CARD_DEFINITIONS.reduce<Record<string, AgentChatLogEntry[]>>((acc, definition) => {
-      const initialMessages = definition.initialMessages
-        ? definition.initialMessages.map((message, index) => ({
-            message: { ...message },
-            timestamp: INITIAL_MESSAGE_TIMESTAMP + index * TIMESTAMP_INCREMENT,
-          }))
-        : [];
-      acc[definition.id] = initialMessages;
-      return acc;
-    }, {});
+    const base = AGENT_CARD_DEFINITIONS.reduce<Record<string, AgentChatLogEntry[]>>(
+      (acc, definition) => {
+        const initialMessages = definition.initialMessages
+          ? definition.initialMessages.map((message, index) => ({
+              message: { ...message },
+              timestamp: INITIAL_MESSAGE_TIMESTAMP + index * TIMESTAMP_INCREMENT,
+            }))
+          : [];
+        acc[definition.id] = initialMessages;
+        return acc;
+      },
+      {}
+    );
     const pending: Record<string, string> = {};
 
     const appendMessage = (agentId: string, entry: AgentChatLogEntry) => {
@@ -284,9 +296,7 @@ export const SessionView = ({
     const sortedMessages = Object.entries(base).reduce<Record<string, ChatMessage[]>>(
       (acc, [agentId, entries]) => {
         const sorted = entries.length
-          ? [...entries]
-              .sort((a, b) => a.timestamp - b.timestamp)
-              .map((entry) => entry.message)
+          ? [...entries].sort((a, b) => a.timestamp - b.timestamp).map((entry) => entry.message)
           : [];
         acc[agentId] = sorted;
         return acc;
@@ -480,19 +490,20 @@ export const SessionView = ({
           return JSON.stringify({ success: false, error: 'empty payload' });
         }
         const payload = JSON.parse(rpcInvocation.payload) as AgentMetricsRpcPayload;
-        if (!isMounted || !payload.agent_id) {
+        const agentId = payload.agent_id;
+        if (!isMounted || !agentId) {
           return JSON.stringify({ success: true });
         }
 
         setAgentMetrics((prev) => {
-          const existing = prev[payload.agent_id];
+          const existing = prev[agentId];
           const fallbackDefinition =
-            AGENT_DEFINITION_BY_ID[payload.agent_id] ?? AGENT_DEFINITION_BY_ID[AGENT_ONE_ID];
+            AGENT_DEFINITION_BY_ID[agentId] ?? AGENT_DEFINITION_BY_ID[AGENT_ONE_ID];
           const fallback = existing ?? cloneMetrics(fallbackDefinition.initialMetrics);
 
           return {
             ...prev,
-            [payload.agent_id]: {
+            [agentId]: {
               stt: coerceMetricDatum(payload.stt, fallback.stt),
               llm: coerceMetricDatum(payload.llm, fallback.llm),
               tts: coerceMetricDatum(payload.tts, fallback.tts),
@@ -500,7 +511,7 @@ export const SessionView = ({
           };
         });
 
-        const agentDefinition = AGENT_DEFINITION_BY_ID[payload.agent_id];
+        const agentDefinition = AGENT_DEFINITION_BY_ID[agentId];
         if (agentDefinition) {
           setAgentStatuses((prev) => {
             if (prev[agentDefinition.name]) {
@@ -510,14 +521,15 @@ export const SessionView = ({
           });
           setActiveAgentId(agentDefinition.id);
         }
-        if (payload.participant_identity) {
+        const participantIdentity = payload.participant_identity;
+        if (participantIdentity) {
           setIdentityToAgentId((prev) => {
-            if (prev[payload.participant_identity] === payload.agent_id) {
+            if (prev[participantIdentity] === agentId) {
               return prev;
             }
             return {
               ...prev,
-              [payload.participant_identity]: payload.agent_id!,
+              [participantIdentity]: agentId,
             };
           });
         }
@@ -722,7 +734,7 @@ export const SessionView = ({
   return (
     <section
       className={cn(
-        'bg-bg0 relative z-10 h-full w-full overflow-hidden flex flex-col pt-6 md:pt-28',
+        'bg-bg0 relative z-10 flex h-full w-full flex-col overflow-hidden pt-6 md:pt-28',
         props.className
       )}
     >
@@ -731,7 +743,7 @@ export const SessionView = ({
         className="flex-1 overflow-hidden px-4 py-8 md:px-10"
         style={{ paddingBottom: `${contentPaddingBottom}px` }}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto h-full">
+        <div className="mx-auto grid h-full max-w-7xl grid-cols-1 gap-6 md:gap-8 lg:grid-cols-3">
           {agentCards.map((agent) => (
             <AgentCard
               key={agent.name}

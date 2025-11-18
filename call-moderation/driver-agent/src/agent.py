@@ -33,7 +33,7 @@ class Assistant(Agent):
 
     async def on_enter(self):
         await self.session.generate_reply(
-            instructions="Greet the user by asking if it's Shayne",
+            instructions="Greet the user by asking if it's Shayne. Don't say anything else in the greeting until the user responds.",
         )
 
 def prewarm(proc: JobProcess):

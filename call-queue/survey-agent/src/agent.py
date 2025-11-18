@@ -143,6 +143,11 @@ class Assistant(Agent):
     def __init__(self) -> None:
         super().__init__(instructions=ASSISTANT_INSTRUCTIONS)
 
+    async def on_enter(self):
+        await self.session.generate_reply(
+            instructions="Greet the user, then ask the first question.",
+        )
+
     @function_tool()
     async def record_survey_response(
         self,
@@ -166,6 +171,8 @@ class Assistant(Agent):
 
         remaining = len(SURVEY_QUESTIONS) - len(userdata.responses)
         return f"Recorded response for {question_id}. {remaining} question(s) remaining."
+
+
 
 
 def prewarm(proc: JobProcess):

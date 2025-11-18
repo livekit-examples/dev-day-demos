@@ -1,8 +1,8 @@
 'use client';
 
-import { MetricBar } from './metric-bar';
-import { AgentChatArea } from './agent-chat-area';
 import { cn } from '@/lib/utils';
+import { AgentChatArea } from './agent-chat-area';
+import { MetricBar } from './metric-bar';
 
 export interface AgentMetricDatum {
   label: string;
@@ -59,29 +59,26 @@ export function AgentCard({
     <div
       onMouseEnter={onHover}
       className={cn(
-        'flex flex-col gap-6 p-6 bg-bg1 rounded-xl border border-separator1 h-full min-h-0 transition-shadow duration-200 hover:border-[#1ED5F9] hover:shadow-[0_0_25px_rgba(30,213,249,0.35)]',
+        'bg-bg1 border-separator1 flex h-full min-h-0 flex-col gap-6 rounded-xl border p-6 transition-shadow duration-200 hover:border-[#1ED5F9] hover:shadow-[0_0_25px_rgba(30,213,249,0.35)]',
         isHighlighted && 'border-[#1ED5F9] shadow-[0_0_25px_rgba(30,213,249,0.35)]',
         className
       )}
     >
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between gap-3">
+      <div className="flex flex-shrink-0 items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <span
-            className={cn(
-              'w-2.5 h-2.5 rounded-full',
-              isDispatched ? 'bg-green-500' : 'bg-red-500',
-            )}
+            className={cn('h-2.5 w-2.5 rounded-full', isDispatched ? 'bg-green-500' : 'bg-red-500')}
             aria-label={isDispatched ? 'Agent dispatched' : 'Agent not dispatched'}
           />
           <h3 className="text-fg0 text-xl font-bold">{agentName}</h3>
-          <span className="text-[#1ED5F9] font-mono text-sm">{formatLatency(totalLatencyMs)}</span>
+          <span className="font-mono text-sm text-[#1ED5F9]">{formatLatency(totalLatencyMs)}</span>
         </div>
         {!isDispatched && onDispatch && (
-          <div className="flex items-center min-h-[34px]">
+          <div className="flex min-h-[34px] items-center">
             {isDispatching ? (
               <span
-                className="text-sm text-fg3 bg-white/5 px-4 py-1.5 rounded-md border border-white/10"
+                className="text-fg3 rounded-md border border-white/10 bg-white/5 px-4 py-1.5 text-sm"
                 aria-live="polite"
               >
                 Dispatching…
@@ -90,7 +87,7 @@ export function AgentCard({
               <button
                 type="button"
                 onClick={onDispatch}
-                className="bg-white/10 hover:bg-white/20 text-fg0 text-sm font-medium py-1.5 px-4 rounded-md transition-colors"
+                className="text-fg0 rounded-md bg-white/10 px-4 py-1.5 text-sm font-medium transition-colors hover:bg-white/20"
               >
                 Dispatch Agent
               </button>
@@ -101,13 +98,25 @@ export function AgentCard({
 
       {/* Metrics */}
       <div className="flex-shrink-0 space-y-4">
-        <MetricBar label={metrics.stt.label} value={metrics.stt.value} latencyMs={metrics.stt.latencyMs} />
-        <MetricBar label={metrics.llm.label} value={metrics.llm.value} latencyMs={metrics.llm.latencyMs} />
-        <MetricBar label={metrics.tts.label} value={metrics.tts.value} latencyMs={metrics.tts.latencyMs} />
+        <MetricBar
+          label={metrics.stt.label}
+          value={metrics.stt.value}
+          latencyMs={metrics.stt.latencyMs}
+        />
+        <MetricBar
+          label={metrics.llm.label}
+          value={metrics.llm.value}
+          latencyMs={metrics.llm.latencyMs}
+        />
+        <MetricBar
+          label={metrics.tts.label}
+          value={metrics.tts.value}
+          latencyMs={metrics.tts.latencyMs}
+        />
       </div>
 
       {/* Chat Area - scrollable */}
-      <div className="mt-auto pt-6 border-t border-separator1 flex flex-col min-h-0 flex-1 overflow-hidden">
+      <div className="border-separator1 mt-auto flex min-h-0 flex-1 flex-col overflow-hidden border-t pt-6">
         <div className="flex-1 overflow-y-auto">
           <AgentChatArea messages={messages} />
         </div>
