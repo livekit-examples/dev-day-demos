@@ -1,51 +1,54 @@
-# Livestream with LiveKit
+# Teleoperation with LiveKit
 
-> [!TIP]
-> Try a live demo here 👉 [livestream.livekit.io](https://livestream.livekit.io)
+This app is a teleoperation demo built on LiveKit. It streams multiple camera feeds and robot telemetry in real time to a 3D interface, so a remote operator can “sit inside” a robot bay: watching live video, visualizing joint angles, and monitoring arm status with sub‑second latency.
 
-Today most livestreams experience a 5–30 second lag, which is evident in the delay it takes for streamers to respond to chats. Those streams use HLS, which leverages existing CDNs by uploading 5–30 second video chunks, which clients download one chunk at a time. HLS is hugely scalable, but it comes with latency.
+Built with [Next.js](https://nextjs.org/), [LiveKit Cloud](https://livekit.io/cloud), and the LiveKit Server SDK, it acts as both:
 
-LiveKit is a sort of WebRTC CDN, achieving sub-100ms latency for audiences of 1000 or 100,000 by streaming video over backbone Internet connections and only going over the public Internet for the last mile (that is, delivery to connected clients). This enables true real-time, large-scale events, where anyone and everyone can participate.
+- a browser UI for operators (video feeds, LiDAR view, 3D arm), and  
+- a backend API layer for managing LiveKit rooms, ingress, and participation state.
 
-Built with [Next.js](https://nextjs.org/), [LiveKit Cloud](https://livekit.io/cloud), and [Radix UI](https://www.radix-ui.com/), this app is a full-stack web application that serves as a browser frontend application and as the backend API server for the clients. As a streamer, you can pick from broadcasting from either the browser via camera and microphone or from [OBS Studio](https://obsproject.com/) using an [LiveKit Ingress](https://livekit.io/product/ingress) endpoint. The application also features the ability to summon viewers from the audience onto the stage similar to X Spaces and Clubhouse.
+## What it shows
 
-## Getting Started
+- **Multi-camera robot view**
+  - `LiveVideoFeed` attaches `RemoteTrack`s from LiveKit rooms and displays them with status badges.
+  - There are distinct video tracks for the robot bay, the right arm, and the left arm, each with its own “live/offline” state.
+- **3D robot arm visualization**
+  - `RobotArm3DWrapper` and `RobotArm3D` render a 3D arm whose joints are driven by positions received over LiveKit data.
+  - Right and left arm joint angles are tracked separately, with color‑coded joints (J1–J6) and per‑joint status (“active”, “inactive”, “error”, “offline”).
+- **Joint telemetry & graphs**
+  - `joint-position-graph.tsx` (and related components) plot joint angles over time so you can see how the robot is moving at a glance.
+  - The landing page keeps timestamps of the most recent update and marks the feed as “live” while telemetry is flowing.
+- **LiDAR / sensor views**
+  - The `lidar` route and `lidar-viewer.tsx` render a dedicated view that connects to a separate LiveKit room for LiDAR data, using a token from the `/api/lidar-token` endpoint.
+- **Stage/hand-raising controls**
+  - The sidebar includes presence/participation controls (raise hand, invite to stage, remove from stage) implemented through the backend controller and LiveKit room metadata.
 
-Clone the repo and install dependencies:
+## Backend API
 
-```
-git clone git@github.com:livekit-examples/livestream.git
-cd nextjs-livestream
-npm install
-```
+Under `src/app/api/*`, the app exposes a small REST API that wraps LiveKit’s Room Service and Ingress APIs via `lib/controller.ts`:
 
-Create a new LiveKit project at [https://cloud.livekit.io](). Then create a new key in your [project settings](). With the provided credentials, create a new .env.development file and fill out the values below:
+- `POST /api/create_ingress` – create an RTMP/WHIP ingress plus a viewer token for OBS or other encoders.
+- `POST /api/create_stream` – create a LiveKit room + access token for a new teleop stream.
+- `POST /api/join_stream` – join an existing room as a viewer; returns a token and WebSocket URL.
+- `POST /api/stop_stream` – end the stream by deleting the room (only the creator may do this).
+- `POST /api/invite_to_stage` – mark a viewer as invited to stage; when combined with a raised hand, grants publish rights.
+- `POST /api/remove_from_stage` – revoke stage status and unpublish a participant’s tracks.
+- `POST /api/raise_hand` – toggle the `hand_raised` flag in participant metadata so the UI can show who wants control.
+- `GET /api/video-token` – convenience endpoint that generates an anonymous viewer token for the `robot` room.
+- `GET /api/lidar-token` – same pattern for a dedicated `lidar` room.
 
-```
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-LIVEKIT_WS_URL=<websocket URL starting with wss://>
-LIVEKIT_API_KEY=<api key>
-LIVEKIT_API_SECRET=<api secret>
-```
+The `Controller` class:
 
-Then run the development server:
+- normalizes the LiveKit host from `NEXT_PUBLIC_LIVEKIT_WS_URL`,
+- uses `RoomServiceClient` to create/delete rooms and update participants, and
+- generates short JWT “session” tokens for the stage/hand APIs (`createAuthToken` / `getSessionFromReq`).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## How it fits together
 
-You can test it by opening [http://localhost:3000](http://localhost:3000) in a browser.
-
-## Deploy on Vercel
-
-This demo is a Next.js app. You can deploy to your Vercel account with one click:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Flivekit-examples%2Fnextjs-livestream&env=NEXT_PUBLIC_SITE_URL,LIVEKIT_WS_URL,LIVEKIT_API_KEY,LIVEKIT_API_SECRET)
-
-Refer to the [the Next.js deployment documentation](https://nextjs.org/docs/deployment) for more about deploying to a production environment.
+1. The backend creates or joins LiveKit rooms for robot video and LiDAR, minting WebRTC access tokens for operators via the API routes.
+2. A teleop pipeline publishes multiple video tracks (bay, right arm, left arm) plus data messages for joint angles and statuses.
+3. The React UI connects to those rooms, subscribes to tracks, and:
+   - renders the live video feeds,
+   - feeds joint telemetry into the 3D arm and graphs,
+   - updates joint state cards and health indicators.
+4. Stage/hand‑raising controls use LiveKit participant metadata to coordinate who is allowed to publish control streams or speak.

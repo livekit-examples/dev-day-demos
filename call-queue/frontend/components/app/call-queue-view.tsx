@@ -72,12 +72,13 @@ function CallQueueCard({ call }: { call: QueueCardData }) {
   const infoGridColumns = 'md:grid-cols-3';
   const participantLabel = call.participantCount === 1 ? 'participant' : 'participants';
   const maskedCallerId = maskDigitsExceptLastFour(call.callerId);
+  const maskedRoomName = maskDigitsExceptLastFour(call.roomName) ?? call.roomName;
 
   return (
     <article className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#070707] p-4 shadow-[0_0_40px_rgba(0,0,0,0.35)] transition hover:border-white/20 md:flex-row md:items-center">
       <div className="flex w-full flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold tracking-[0.3em] text-white/40 uppercase">
-          <span>{call.roomName}</span>
+          <span>{maskedRoomName}</span>
           <span>
             {call.participantCount} {participantLabel}
           </span>

@@ -1,122 +1,102 @@
-# Agent Starter for React
+# Model Battleground Frontend
 
-This is a starter template for [LiveKit Agents](https://docs.livekit.io/agents) that provides a simple voice interface using the [LiveKit JavaScript SDK](https://github.com/livekit/client-sdk-js). It supports [voice](https://docs.livekit.io/agents/start/voice-ai), [transcriptions](https://docs.livekit.io/agents/build/text/), and [virtual avatars](https://docs.livekit.io/agents/integrations/avatar).
+This Next.js app is the **model battleground dashboard**. It connects to a LiveKit room, talks to Agent 1, and visualizes three different voice stacks (Agents 1–3) side‑by‑side with live latency charts, status indicators, and transcripts.
 
-Also available for:
-[Android](https://github.com/livekit-examples/agent-starter-android) • [Flutter](https://github.com/livekit-examples/agent-starter-flutter) • [Swift](https://github.com/livekit-examples/agent-starter-swift) • [React Native](https://github.com/livekit-examples/agent-starter-react-native)
+## Highlights
 
-<picture>
-  <source srcset="./.github/assets/readme-hero-dark.webp" media="(prefers-color-scheme: dark)">
-  <source srcset="./.github/assets/readme-hero-light.webp" media="(prefers-color-scheme: light)">
-  <img src="./.github/assets/readme-hero-light.webp" alt="App screenshot">
-</picture>
+- **Three‑column comparison view** – `SessionView` renders one `AgentCard` per worker (Agent 1, 2, 3) with:
+  - live STT / LLM / TTS latency bars,
+  - streaming transcripts,
+  - connection state, and
+  - a “Dispatch Agent” button for the secondary stacks.
+- **RPC‑driven metrics** – listens for `model_battleground.agent.metrics`, `model_battleground.agent.status`, and `model_battleground.agent.transcript` RPCs, then updates UI state per agent.
+- **Dynamic identity mapping** – maintains a `participant_identity → agent_id` map so transcripts and metrics are always attributed to the right card even if identities shift.
+- **Optimized subscriptions** – only subscribes to media tracks from the highlighted agent’s participant(s) so bandwidth and CPU stay focused on the model you’re inspecting.
 
-### Features:
+## Prerequisites
 
-- Real-time voice interaction with LiveKit Agents
-- Camera video streaming support
-- Screen sharing capabilities
-- Audio visualization and level monitoring
-- Virtual avatar integration
-- Light/dark theme switching with system preference detection
-- Customizable branding, colors, and UI text via configuration
+- Node.js 20+
+- [pnpm 9](https://pnpm.io/)
+- LiveKit project credentials with Agent Dispatch enabled
+- All three backend workers running (`battleground-agent`, `battleground-agent-2`, `battleground-agent-3`)
 
-This template is built with Next.js and is free for you to use or modify as you see fit.
+## Setup
 
-### Project structure
+1. Install dependencies:
 
-```
-agent-starter-react/
-├── app/
-│   ├── (app)/
-│   ├── api/
-│   ├── components/
-│   ├── fonts/
-│   ├── globals.css
-│   └── layout.tsx
-├── components/
-│   ├── livekit/
-│   ├── ui/
-│   ├── app.tsx
-│   ├── session-view.tsx
-│   └── welcome.tsx
-├── hooks/
-├── lib/
-├── public/
-└── package.json
-```
+   ```bash
+   pnpm install
+   ```
 
-## Getting started
+2. Configure environment:
 
-> [!TIP]
-> If you'd like to try this application without modification, you can deploy an instance in just a few clicks with [LiveKit Cloud Sandbox](https://cloud.livekit.io/projects/p_/sandbox/templates/agent-starter-react).
+   ```bash
+   cp .env.example .env.local
+   # then set LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET
+   ```
 
-[![Open on LiveKit](https://img.shields.io/badge/Open%20on%20LiveKit%20Cloud-002CF2?style=for-the-badge&logo=external-link)](https://cloud.livekit.io/projects/p_/sandbox/templates/agent-starter-react)
+3. Start the dev server:
 
-Run the following command to automatically clone this template.
+   ```bash
+   pnpm dev
+   ```
+
+4. In separate terminals, run the agents (at minimum Agent 1; Agents 2/3 can be dispatched on demand):
+
+   ```bash
+   # Agent 1
+   cd ../battleground-agent
+   uv run python src/agent.py dev
+
+   # Agent 2
+   cd ../battleground-agent-2
+   uv run python src/agent.py dev
+
+   # Agent 3
+   cd ../battleground-agent-3
+   uv run python src/agent.py dev
+   ```
+
+5. Open http://localhost:3000, click **Start call**, and begin speaking; the dashboard will show metrics as soon as agents emit RPCs.
+
+## How the dashboard works
+
+- `AGENT_CARD_DEFINITIONS` in `components/app/session-view.tsx` encodes:
+  - internal ids (`agent-1`, `agent-2`, `agent-3`),
+  - display names,
+  - dispatch target names (e.g. `devday-battleground-agent-2`),
+  - initial metric placeholders, and
+  - any known participant identities.
+- When the room connects:
+  - `SessionView` registers RPC handlers for:
+    - `model_battleground.agent.metrics` → updates `agentMetrics` and marks the agent as connected.
+    - `model_battleground.agent.status` → toggles the “connected” pill and updates `identityToAgentId`.
+    - `model_battleground.agent.transcript` → appends/updates per‑agent transcript logs.
+  - Transcripts from the LiveKit components (`useChatMessages`) are merged with the per‑agent logs so each card gets the right combination of system + user messages.
+- Dispatching:
+  - Clicking “Dispatch Agent” on Agents 2 or 3 calls `dispatchAgent`, which sends a `model_battleground.agent.dispatch` RPC to Agent 1 along with the target `agent_name`.
+  - On success, the dashboard marks the target agent as active and starts expecting metrics/status/transcripts for it.
+- Subscription control:
+  - A background effect recalculates which remote participants belong to the highlighted or active agent and toggles track subscription via `RemoteTrackPublication.setSubscribed`.
+
+## Key files
+
+- `components/app/session-view.tsx` – core three‑card layout, RPC handlers, dispatch logic, and subscription management.
+- `components/app/agent-card.tsx` – presentational component for metrics, messages, and dispatch state.
+- `components/livekit/agent-control-bar/*` – mic + chat controls, shared with other demos.
+- `hooks/useChatMessages.ts` – pulls transcript events from LiveKit’s React components.
+
+## Build & deploy
 
 ```bash
-lk app create --template agent-starter-react
+pnpm build
+pnpm start
 ```
 
-Then run the app with:
+Serve over HTTPS so browsers grant mic access, and set `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` in your hosting environment. Make sure the agent names in LiveKit Cloud match the dispatch targets defined in `AGENT_CARD_DEFINITIONS`.
 
-```bash
-pnpm install
-pnpm dev
-```
+## Troubleshooting
 
-And open http://localhost:3000 in your browser.
-
-You'll also need an agent to speak with. Try our starter agent for [Python](https://github.com/livekit-examples/agent-starter-python), [Node.js](https://github.com/livekit-examples/agent-starter-node), or [create your own from scratch](https://docs.livekit.io/agents/start/voice-ai/).
-
-## Configuration
-
-This starter is designed to be flexible so you can adapt it to your specific agent use case. You can easily configure it to work with different types of inputs and outputs:
-
-#### Example: App configuration (`app-config.ts`)
-
-```ts
-export const APP_CONFIG_DEFAULTS: AppConfig = {
-  companyName: 'LiveKit',
-  pageTitle: 'LiveKit Voice Agent',
-  pageDescription: 'A voice agent built with LiveKit',
-
-  supportsChatInput: true,
-  supportsVideoInput: true,
-  supportsScreenShare: true,
-  isPreConnectBufferEnabled: true,
-
-  logo: '/lk-logo.svg',
-  accent: '#002cf2',
-  logoDark: '/lk-logo-dark.svg',
-  accentDark: '#1fd5f9',
-  startButtonText: 'Start call',
-
-  // for LiveKit Cloud Sandbox
-  sandboxId: undefined,
-  agentName: undefined,
-};
-```
-
-You can update these values in [`app-config.ts`](./app-config.ts) to customize branding, features, and UI text for your deployment.
-
-> [!NOTE]
-> The `sandboxId` and `agentName` are for the LiveKit Cloud Sandbox environment.
-> They are not used for local development.
-
-#### Environment Variables
-
-You'll also need to configure your LiveKit credentials in `.env.local` (copy `.env.example` if you don't have one):
-
-```env
-LIVEKIT_API_KEY=your_livekit_api_key
-LIVEKIT_API_SECRET=your_livekit_api_secret
-LIVEKIT_URL=https://your-livekit-server-url
-```
-
-These are required for the voice agent functionality to work with your LiveKit project.
-
-## Contributing
-
-This template is open source and we welcome contributions! Please open a PR or issue through GitHub, and don't forget to join us in the [LiveKit Community Slack](https://livekit.io/join-slack)!
+- **Metrics don’t show up** – verify each agent emits the `model_battleground.agent.metrics` RPC (check worker logs) and that the browser registered handlers after the room connected.
+- **Dispatch fails** – ensure Agent 1 is running and has the `model_battleground.agent.dispatch` RPC wired to the LiveKit Agent Dispatch API; also confirm the `agent_name` strings match the workers’ `agent_name`/`name` settings.
+- **Wrong transcripts under a card** – check `participantIdentities` in `AGENT_CARD_DEFINITIONS` or watch the `identityToAgentId` mapping; adjust the identity hints if your agent identities differ.*** End Patch  ***!
