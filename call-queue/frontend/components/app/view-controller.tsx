@@ -3,8 +3,8 @@
 import { useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useRoomContext } from '@livekit/components-react';
-import { useSession } from '@/components/app/session-provider';
 import { CallQueueView } from '@/components/app/call-queue-view';
+import { useSession } from '@/components/app/session-provider';
 import { SessionView } from '@/components/app/session-view';
 
 const MotionCallQueueView = motion.create(CallQueueView);

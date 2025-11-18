@@ -13,7 +13,7 @@ interface AppProps {
 export function App({ appConfig }: AppProps) {
   return (
     <SessionProvider appConfig={appConfig}>
-      <main className="min-h-svh w-full bg-background">
+      <main className="bg-background min-h-svh w-full">
         <ViewController />
       </main>
       <StartAudio label="Start Audio" />

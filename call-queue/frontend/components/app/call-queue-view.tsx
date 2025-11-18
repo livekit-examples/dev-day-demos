@@ -9,8 +9,8 @@ import {
 } from '@phosphor-icons/react/dist/ssr';
 import { Button } from '@/components/livekit/button';
 import { useRoomQueue } from '@/hooks/useRoomQueue';
-import type { MetadataMap, ParticipantSummary, RoomWithParticipants } from '@/types/call-queue';
 import { cn } from '@/lib/utils';
+import type { MetadataMap, ParticipantSummary, RoomWithParticipants } from '@/types/call-queue';
 
 const DEFAULT_SURVEY_TOTAL = 5;
 const MIN_PROGRESS_TOTAL = 1;
@@ -36,7 +36,7 @@ interface QueueCardData {
 function SurveyProgress({ answered, total }: { answered: number; total: number }) {
   return (
     <div className="flex items-center gap-2">
-      <p className="text-white font-semibold">
+      <p className="font-semibold text-white">
         {answered}/{total}
       </p>
       <div className="flex items-center gap-1">
@@ -67,11 +67,11 @@ function InfoBlock({
 }) {
   return (
     <div className="space-y-1">
-      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/50">{label}</p>
+      <p className="text-xs font-semibold tracking-[0.25em] text-white/50 uppercase">{label}</p>
       {value ? (
         <div>
-          <p className="text-white text-lg font-semibold">{value}</p>
-          {subtitle && <p className="text-white/60 text-sm">{subtitle}</p>}
+          <p className="text-lg font-semibold text-white">{value}</p>
+          {subtitle && <p className="text-sm text-white/60">{subtitle}</p>}
         </div>
       ) : (
         <div>{children}</div>
@@ -95,7 +95,7 @@ function CallQueueCard({
   return (
     <article className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-[#070707] p-4 shadow-[0_0_40px_rgba(0,0,0,0.35)] transition hover:border-white/20 md:flex-row md:items-center">
       <div className="flex w-full flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold uppercase tracking-[0.3em] text-white/40">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold tracking-[0.3em] text-white/40 uppercase">
           <span>{call.roomName}</span>
           <span>
             {call.participantCount} {participantLabel}
@@ -126,7 +126,7 @@ function CallQueueCard({
           variant="ghost"
           aria-label={`${startButtonText} (${call.callerId})`}
           onClick={() => onAnswerCall(call)}
-          className="headset-button size-12 rounded-full bg-primary/10 text-primary transition hover:bg-primary/20 hover:text-primary"
+          className="headset-button bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary size-12 rounded-full transition"
         >
           <HeadsetIcon size={28} weight="duotone" />
         </Button>
@@ -152,7 +152,7 @@ function EmptyQueueState({ onMakeCall }: { onMakeCall: () => void }) {
           variant="primary"
           size="lg"
           onClick={onMakeCall}
-          className="h-12 w-full max-w-xs rounded-xl bg-primary text-base font-semibold normal-case tracking-tight text-black hover:bg-primary/80"
+          className="bg-primary hover:bg-primary/80 h-12 w-full max-w-xs rounded-xl text-base font-semibold tracking-tight text-black normal-case"
         >
           Make an outgoing call
         </Button>
@@ -164,9 +164,7 @@ function EmptyQueueState({ onMakeCall }: { onMakeCall: () => void }) {
 function LoadingState() {
   return (
     <div className="flex flex-1 items-center justify-center py-24">
-      <p className="text-white/60 font-mono text-xs uppercase tracking-[0.4em]">
-        Loading rooms…
-      </p>
+      <p className="font-mono text-xs tracking-[0.4em] text-white/60 uppercase">Loading rooms…</p>
     </div>
   );
 }
@@ -204,16 +202,16 @@ function PhoneNumberModal({
         <button
           aria-label="Close"
           onClick={onClose}
-          className="absolute right-4 top-4 inline-flex size-10 items-center justify-center rounded-full bg-white/5 text-white/70 transition hover:bg-white/15"
+          className="absolute top-4 right-4 inline-flex size-10 items-center justify-center rounded-full bg-white/5 text-white/70 transition hover:bg-white/15"
         >
           <XIcon size={20} weight="bold" />
         </button>
         <div className="mb-6 flex items-center gap-3">
-          <div className="rounded-full bg-primary/10 p-3 text-primary">
+          <div className="bg-primary/10 text-primary rounded-full p-3">
             <PhoneCallIcon size={28} weight="duotone" />
           </div>
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-white/50">Outgoing call</p>
+            <p className="text-sm tracking-[0.2em] text-white/50 uppercase">Outgoing call</p>
             <h3 className="text-2xl font-semibold text-white">Dial a phone number</h3>
           </div>
         </div>
@@ -231,7 +229,7 @@ function PhoneNumberModal({
               value={phoneNumber}
               onChange={(event) => onPhoneNumberChange(event.target.value)}
               placeholder="(555) 123-4567"
-              className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-base text-white placeholder:text-white/30 focus:border-primary focus:outline-none"
+              className="focus:border-primary w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-base text-white placeholder:text-white/30 focus:outline-none"
             />
           </label>
           <p className="text-xs text-white/40">Calls are routed through the LiveKit SIP bridge.</p>
@@ -240,7 +238,7 @@ function PhoneNumberModal({
               type="button"
               variant="ghost"
               onClick={onClose}
-              className="h-11 rounded-xl border border-white/10 bg-transparent px-6 text-sm font-semibold normal-case tracking-tight text-white/70 hover:bg-white/10"
+              className="h-11 rounded-xl border border-white/10 bg-transparent px-6 text-sm font-semibold tracking-tight text-white/70 normal-case hover:bg-white/10"
             >
               Cancel
             </Button>
@@ -248,7 +246,7 @@ function PhoneNumberModal({
               type="submit"
               variant="primary"
               disabled={!phoneNumber.trim()}
-              className="h-11 rounded-xl bg-primary px-6 text-sm font-semibold normal-case tracking-tight text-black hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-50"
+              className="bg-primary hover:bg-primary/80 h-11 rounded-xl px-6 text-sm font-semibold tracking-tight text-black normal-case disabled:cursor-not-allowed disabled:opacity-50"
             >
               Start call
             </Button>
@@ -298,7 +296,7 @@ export const CallQueueView = React.forwardRef<
       <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col">
         {showHeader && (
           <header className="mb-8 flex flex-col gap-6 md:mb-10">
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-white/50">
+            <p className="text-xs font-semibold tracking-[0.4em] text-white/50 uppercase">
               Live Queue
             </p>
             <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
@@ -312,7 +310,7 @@ export const CallQueueView = React.forwardRef<
                 variant="primary"
                 size="lg"
                 onClick={() => setIsModalOpen(true)}
-                className="h-12 min-w-[220px] rounded-xl bg-primary px-6 text-base font-semibold normal-case tracking-tight text-black hover:bg-primary/80"
+                className="bg-primary hover:bg-primary/80 h-12 min-w-[220px] rounded-xl px-6 text-base font-semibold tracking-tight text-black normal-case"
               >
                 Make an outgoing call
               </Button>
@@ -368,10 +366,7 @@ function createQueueCardData(roomEntry: RoomWithParticipants): QueueCardData | n
   const callerId = deriveCallerId(participant, room);
   const callerSubtitle = deriveCallerSubtitle(participant, callerId);
   const duration = formatDuration(resolveCreationTimeMs(room));
-  const { answered, total } = deriveSurveyCounts(
-    participant.metadataDecoded,
-    room.metadataDecoded
-  );
+  const { answered, total } = deriveSurveyCounts(participant.metadataDecoded, room.metadataDecoded);
 
   return {
     id: room.sid || room.name,
