@@ -25,6 +25,7 @@ class EXAClient:
             raise ValueError("EXA_API_KEY environment variable or api_key parameter is required")
         
         self.client = Exa(self.api_key)
+        self.client.headers["x-exa-integration"] = "livekit-integration"
     
     async def search(
         self,
@@ -32,27 +33,11 @@ class EXAClient:
         retry_count: int = 3,
         backoff_factor: float = 2.0
     ) -> List[EXAResult]:
-        """
-        Search using EXA API
-        
-        Args:
-            params: Search parameters
-            retry_count: Number of retries on failure
-            backoff_factor: Exponential backoff multiplier
-            
-        Returns:
-            List of search results
-        """
-        # Build kwargs for search
+        """Search using EXA API."""
         kwargs = {
             "num_results": params.num_results or 10,
         }
         
-        # Add use_autoprompt only if explicitly set (not all SDK versions support it)
-        if params.use_autoprompt is not None:
-            kwargs["use_autoprompt"] = params.use_autoprompt
-        
-        # Add optional parameters
         if params.search_type:
             kwargs["type"] = params.search_type
         if params.result_category:
@@ -129,34 +114,19 @@ class EXAClient:
         # Build kwargs for get_contents based on EXA SDK signature
         kwargs = {}
         
-        # Add text options - can be bool or dict with maxCharacters
-        if options.text:
-            if options.max_characters:
-                kwargs["text"] = {"max_characters": options.max_characters}
-            else:
-                kwargs["text"] = True
-        
-        # Add highlights options
+        # Highlights default, text opt-in
         if options.highlights:
-            if isinstance(options.highlights, dict):
-                kwargs["highlights"] = options.highlights
+            if options.max_characters:
+                kwargs["highlights"] = {"max_characters": options.max_characters}
             else:
                 kwargs["highlights"] = True
-        
-        # Add summary options
-        if options.summary:
-            if isinstance(options.summary, dict):
-                kwargs["summary"] = options.summary
-            else:
-                kwargs["summary"] = True
-        
-        # Add livecrawl options
-        if options.livecrawl:
-            kwargs["livecrawl"] = options.livecrawl
-        if options.livecrawl_timeout:
-            kwargs["livecrawl_timeout"] = options.livecrawl_timeout
-        
-        # Add subpages
+
+        if options.text:
+            kwargs["text"] = True
+
+        if options.max_age_hours is not None:
+            kwargs["maxAgeHours"] = options.max_age_hours
+
         if options.subpages:
             kwargs["subpages"] = options.subpages
         if options.subpage_target:
