@@ -53,6 +53,12 @@ _LIVECRAWL_TO_MAX_AGE = {
     "fallback": 24,
 }
 
+# Reverse map: maxAgeHours → livecrawl for SDK compat (SDK doesn't support maxAgeHours yet)
+_MAX_AGE_TO_LIVECRAWL = {
+    0: "always",
+    -1: "never",
+}
+
 
 class EXAContentOptions(BaseModel):
     """Options for EXA contents API"""

@@ -8,9 +8,9 @@ from typing import List, Optional
 from exa_py import Exa
 
 try:
-    from agent.schemas import EXASearchParams, EXAContentOptions, EXAResult, EXAContent
+    from agent.schemas import EXASearchParams, EXAContentOptions, EXAResult, EXAContent, _MAX_AGE_TO_LIVECRAWL
 except ImportError:
-    from schemas import EXASearchParams, EXAContentOptions, EXAResult, EXAContent
+    from schemas import EXASearchParams, EXAContentOptions, EXAResult, EXAContent, _MAX_AGE_TO_LIVECRAWL
 
 logger = logging.getLogger("exa-client")
 logger.setLevel(logging.INFO)
@@ -125,7 +125,8 @@ class EXAClient:
             kwargs["text"] = True
 
         if options.max_age_hours is not None:
-            kwargs["maxAgeHours"] = options.max_age_hours
+            livecrawl_val = _MAX_AGE_TO_LIVECRAWL.get(options.max_age_hours, "fallback")
+            kwargs["livecrawl"] = livecrawl_val
 
         if options.subpages:
             kwargs["subpages"] = options.subpages
