@@ -49,7 +49,6 @@ async def quick_search(
     search_params = EXASearchParams(
         query=query,
         num_results=num_results,
-        use_autoprompt=None
     )
     
     results = await exa_client.search(search_params)

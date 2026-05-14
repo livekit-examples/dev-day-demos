@@ -120,7 +120,6 @@ class ResearchSubtopic:
         search_params = EXASearchParams(
             query=primary_query,
             num_results=self.max_results_per_search,
-            use_autoprompt=None
         )
         
         results = await self.exa_client.search(search_params)
@@ -146,8 +145,9 @@ class ResearchSubtopic:
         
         content_options = EXAContentOptions(
             text=True,
+            highlights=False,
             max_characters=5000,
-            livecrawl="fallback"
+            max_age_hours=24,
         )
         
         result_urls = [r.url for r in results]
