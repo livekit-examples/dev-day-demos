@@ -24,43 +24,49 @@ class JobState(str, Enum):
 class EXASearchParams(BaseModel):
     """Parameters for EXA search API"""
     query: str
-    search_type: Optional[Literal["auto", "keyword", "neural"]] = "auto"
-    result_category: Optional[str] = None
+    search_type: Optional[Literal["auto", "fast", "deep"]] = "auto"
+    result_category: Optional[
+        Literal["company", "people", "research paper", "news", "personal site", "financial report"]
+    ] = None
     country: Optional[str] = None
     num_results: Optional[int] = 10
-    
+
     # Date filters
     start_published_date: Optional[str] = None  # ISO format
     end_published_date: Optional[str] = None
     start_crawl_date: Optional[str] = None
     end_crawl_date: Optional[str] = None
-    
+
     # Domain filters
     include_domains: Optional[List[str]] = None
     exclude_domains: Optional[List[str]] = None
-    
+
     # Text filters
     include_text: Optional[str] = None  # exact phrase, 5 words max
     exclude_text: Optional[str] = None
-    
-    # Advanced options
-    use_autoprompt: Optional[bool] = None  # Not supported in all EXA SDK versions
+
+
+# Backwards compat: map legacy livecrawl values to maxAgeHours
+_LIVECRAWL_TO_MAX_AGE = {
+    "always": 0,
+    "never": -1,
+    "fallback": 24,
+}
+
+# Reverse map: maxAgeHours → livecrawl for SDK compat (SDK doesn't support maxAgeHours yet)
+_MAX_AGE_TO_LIVECRAWL = {
+    0: "always",
+    -1: "never",
+}
 
 
 class EXAContentOptions(BaseModel):
     """Options for EXA contents API"""
-    text: Optional[bool] = True  # Get full text
-    highlights: Optional[bool] = False
-    summary: Optional[bool] = False
-    
-    # Livecrawl options
-    livecrawl: Optional[Literal["always", "fallback", "never"]] = "fallback"
-    livecrawl_timeout: Optional[int] = 5000  # milliseconds
-    
-    # Content format
+    text: Optional[bool] = False
+    highlights: Optional[bool] = True
     max_characters: Optional[int] = None
-    include_html_tags: Optional[bool] = False
-    subpages: Optional[int] = None  # Include subpages
+    max_age_hours: Optional[int] = None
+    subpages: Optional[int] = None
     subpage_target: Optional[str] = None
 
 
