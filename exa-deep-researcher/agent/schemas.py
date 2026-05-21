@@ -24,7 +24,7 @@ class JobState(str, Enum):
 class EXASearchParams(BaseModel):
     """Parameters for EXA search API"""
     query: str
-    search_type: Optional[Literal["auto", "fast", "instant", "deep"]] = "auto"
+    search_type: Optional[Literal["auto", "fast", "deep"]] = "auto"
     result_category: Optional[
         Literal["company", "people", "research paper", "news", "personal site", "financial report"]
     ] = None
