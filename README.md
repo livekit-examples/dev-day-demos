@@ -1,3 +1,7 @@
+> [!CAUTION]
+> The examples in this repo are a legacy, unmaintained set of examples that don't represent the best way to build agents today.
+> For an up-to-date set of examples that exercise best practices, see the main [Agents repository](https://github.com/livekit/agents/tree/main/examples).
+
 # LiveKit Dev Day Demos
 
 This repository collects the demos used for LiveKit Dev Day: end‑to‑end examples of voice agents, multi‑agent orchestration, teleoperation, and tool‑calling backends. Each demo has its own README with setup and architecture details; this index is meant to help you quickly explore what’s available.
